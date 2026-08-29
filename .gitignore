@@ -1,0 +1,16 @@
+# 敏感密钥与构建产物 (不提交)
+forge/private.pem
+out/*.jks
+out/patched.apk
+out/patched.apk.idsig
+out/*.aligned.apk
+
+# Python
+__pycache__/
+*.pyc
+
+# Java
+test/*.class
+
+# 本地杂项
+*.log
