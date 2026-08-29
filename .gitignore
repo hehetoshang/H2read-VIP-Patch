@@ -1,16 +1,5 @@
-# 敏感密钥与构建产物 (不提交)
-forge/private.pem
-out/*.jks
-out/patched.apk
-out/patched.apk.idsig
-out/*.aligned.apk
-
-# Python
+# 仅排除临时/编译产物 (私人仓库, 密钥与构建产物一并入库)
 __pycache__/
 *.pyc
-
-# Java
 test/*.class
-
-# 本地杂项
 *.log
