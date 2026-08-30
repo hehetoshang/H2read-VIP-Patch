@@ -29,8 +29,10 @@ H2read-VIP-Patch / import_license.py
 import argparse
 import subprocess
 import sys
+import tempfile
 import time
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
 PKG_DEFAULT = "com.lowh202.sevennovel"
 PREFS_NAME = "h2read_vip_prefs"
@@ -91,9 +93,10 @@ def push_license(lic):
             print("[!] 解析现有 prefs 失败, 将重建 (丢失试用状态, 不影响 VIP)")
     new_xml = build_xml(entries, lic)
     tmp = "/data/local/tmp/h2read_prefs.xml"
-    with open("/tmp/h2read_prefs_push.xml", "w") as f:
+    tmp_push = Path(tempfile.gettempdir()) / "h2read_prefs_push.xml"
+    with open(tmp_push, "w") as f:
         f.write(new_xml)
-    subprocess.run(["adb", "push", "/tmp/h2read_prefs_push.xml", tmp], check=True, capture_output=True)
+    subprocess.run(["adb", "push", str(tmp_push), tmp], check=True, capture_output=True)
     adb("shell", "mkdir", "-p", PREFS_DIR)
     uid = adb("shell", "dumpsys", "package", PKG_DEFAULT, check=False)
     user_id = None
@@ -114,12 +117,10 @@ def push_license(lic):
 def probe_machine_code():
     """导入错误机器码许可证 -> 触发 DEVICE_MISMATCH 日志 -> 日志含真实机器码"""
     # 先用 keygen 签发一个 dummy 机器码的许可证 (离线, 用攻击者私钥)
-    from pathlib import Path
-    import tempfile
     key = "forge/private.pem"
     if not Path(key).exists():
         sys.exit("[!] 缺少 forge/private.pem, 请先: python3 keygen.py gen-keys --out forge/")
-    lic_path = "/tmp/h2read_dummy_lic.txt"
+    lic_path = str(Path(tempfile.gettempdir()) / "h2read_dummy_lic.txt")
     subprocess.run([sys.executable, "keygen.py", "issue",
                     "--device", "H2R-DUMMY-0000-0000-0000",
                     "--key", key, "--permanent", "--out", lic_path],
@@ -164,9 +165,10 @@ def main():
     if args.clear:
         adb("shell", "am", "force-stop", args.package)
         new_xml = build_xml([], None)
-        with open("/tmp/h2read_prefs_push.xml", "w") as f:
+        tmp_push = Path(tempfile.gettempdir()) / "h2read_prefs_push.xml"
+        with open(tmp_push, "w") as f:
             f.write(new_xml)
-        subprocess.run(["adb", "push", "/tmp/h2read_prefs_push.xml", "/data/local/tmp/h2read_prefs.xml"],
+        subprocess.run(["adb", "push", str(tmp_push), "/data/local/tmp/h2read_prefs.xml"],
                        check=True, capture_output=True)
         adb("shell", "cp", "/data/local/tmp/h2read_prefs.xml", PREFS_XML)
         print("[+] 许可证已清除")
